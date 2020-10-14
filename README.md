@@ -8,20 +8,38 @@
 5) Deploy container in Google Cloud Run
 
 ## Verify VPC Connection
-
+```
 gcloud --project cockroach-chrisc compute networks peerings create chrisc-cc-gcp --network=chrisc-vpc --peer-network=crdb --peer-project=crl-prod-5th --auto-create-routes
-
+```
 ## Local testing with docker
-
+```
 docker build -t chriscasano/gcr:latest .
 docker run -p 8080:8080 chriscasano/gcr
+```
+## Google Build 
+
+Docs: https://cloud.google.com/run/docs/quickstarts/build-and-deploy?_ga=2.147364543.-903456326.1570542011
+
+Add the container to the registry
+```
+gcloud builds submit --tag gcr.io/cockroach-chrisc/cctest
+```
+
+Deploy the container in Google Cloud Run
+
+```
+gcloud run deploy --image gcr.io/cockroach-chrisc/cctest --platform managed
+```
+Choose the region, service name and Y for allow unauthenticated invocations
 
 ## CC connection string
-
+```
 cockroach sql --url 'postgres://chris@clerk-test-5th.gcp-us-east4.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&sslrootcert=<your_certs_directory>/clerk-test-ca.crt
-
+```
 
 #### install tools
+```
 apt-get update
 apt-get install net-tools
 apt-get install iputils-ping
+```

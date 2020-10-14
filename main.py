@@ -29,7 +29,7 @@ def connect():
 
     except psycopg2.Error as e:
         t = "Failed"
-        print("DB Connection Failed")
+        print("DB Connection Failed: " + e.pgcode + " error code: " + e.pgerror)
 
     cur.close()
     conn.close()
