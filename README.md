@@ -1,11 +1,11 @@
 # Google Cloud Run using a Serverless VPC Connector for CockroachCloud
 
-## Steps
+## High Level Steps
 
 1) Create You're Own VPC in GCloud
 2) Create CockroachCloud cluster
-  - Create a SQL user
-  - Create a VPC Peering between CockroachCloud and your new VPC in step 1
+    - Create a SQL user
+    - Create a VPC Peering between CockroachCloud and your new VPC in step 1
 3) Create VPC Serverless Connector
 4) Deploy a container in Google Cloud Run
 
@@ -29,6 +29,8 @@ _Console --> VPC Networks_
 
 ## Step 2 - Create a CockroachCloud Cluster
 
+Create a CockroachCloud cluster
+
 Add a new SQL User
 
 Add a VPC Peering connection (need Project Id and name of VPC network created in Step 1)
@@ -39,7 +41,16 @@ Verify VPC Connection in your new VPC.  The verification command should look som
 gcloud --project cockroach-chrisc compute networks peerings create chrisc-cc-gcp --network=chrisc-vpc --peer-network=crdb --peer-project=crl-prod-5th --auto-create-routes
 ```
 
-# Step 3 -  Create VPC Servlerless Connector
+Also get the Connect URL for the database and the required cert.
+
+Place the cert in a /certs folder in this directory.
+
+```
+mkdir certs
+```
+
+
+## Step 3 -  Create VPC Servlerless Connector
 
 In Google console, go toS "Console" -> "Serverless VPC Access"
 
@@ -52,25 +63,14 @@ In Google console, go toS "Console" -> "Serverless VPC Access"
   - Network = chrisc-vpc (the name from Step 1)
 - Click Create
 - Validate the connector creates successfully
+- Choose the Route all traffic option. (Should we try this Private IP setup?)
 
-- Choose the Route all traffic option?  Could we try this Private IP setup?
+## Step 4 - Run Google Run
 
+### Local Testing with Docker (Optional)
 
-### Verify if adding more permissions is neccessary...
+Instead of using the VPC Peering connection string, us a public IP instead.  To do this, you can create a whitelisted IP in CockroachCloud for your local machine.
 
-```
-gcloud projects add-iam-policy-binding $PROJECT_ID \
---member=serviceAccount:service-$PROJECT_NUMBER@gcf-admin-robot.iam.gserviceaccount.com \
---role=roles/viewer
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
---member=serviceAccount:service-$PROJECT_NUMBER@gcf-admin-robot.iam.gserviceaccount.com \
---role=roles/compute.networkUser
-```
-
-# Step 4 - Run Google Run
-
-## Local testing with docker
 ```
 docker build -t chriscasano/gcr:latest .
 export COCKROACH_URI="postgres://chris:<password>@clerk-test-5th.gcp-us-east4.cockroachlabs.cloud:26257/defaultdb?sslmode=require&sslrootcert=/app/certs/clerk-test-ca.crt"
@@ -85,7 +85,6 @@ Add the container to the registry
 ```
 gcloud builds submit --tag gcr.io/cockroach-chrisc/cctest
 ```
-
 
 ~~gcloud run deploy --image gcr.io/cockroach-chrisc/cctest --platform managed~~
 
